@@ -1,0 +1,25 @@
+soar:
+  name: "Aegis-SOAR Orchestrator"
+  version: "1.0.0"
+  environment: "production"
+
+thresholds:
+  phishing_malicious_engines: 3
+  abuseipdb_confidence_score: 75
+  brute_force_failed_attempts: 5
+
+integrations:
+  virustotal:
+    api_key: ""  # If blank, uses intelligent local threat intel engine
+  abuseipdb:
+    api_key: ""
+  slack:
+    webhook_url: "https://hooks.slack.com/services/MOCK/SECURITY/ALERTS"
+  firewall:
+    driver: "mock_iptables"  # "mock_iptables" or "cloudflare_waf"
+  identity:
+    driver: "mock_okta"
+
+server:
+  host: "0.0.0.0"
+  port: 8082

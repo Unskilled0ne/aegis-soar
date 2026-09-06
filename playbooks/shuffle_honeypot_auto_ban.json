@@ -1,0 +1,52 @@
+{
+  "name": "Shuffle - Honeypot & SSH Brute Force Automated Isolation",
+  "description": "Ingests ShadowPot / Wazuh brute force alerts, queries AbuseIPDB, applies iptables drop rule, and notifies Slack channel.",
+  "workflow_version": "1.1.0",
+  "actions": [
+    {
+      "id": "node_webhook",
+      "label": "ShadowPot Alert Webhook Ingest",
+      "app_name": "Webhook",
+      "environment": "cloud",
+      "parameters": [
+        {"name": "trigger_type", "value": "json_post"}
+      ]
+    },
+    {
+      "id": "node_abuseipdb",
+      "label": "Query AbuseIPDB API",
+      "app_name": "AbuseIPDB",
+      "parameters": [
+        {"name": "ip", "value": "$node_webhook.attacker_ip"},
+        {"name": "max_age_in_days", "value": "90"}
+      ]
+    },
+    {
+      "id": "node_condition",
+      "label": "Is Confidence Score >= 75%",
+      "app_name": "Condition",
+      "parameters": [
+        {"name": "field", "value": "$node_abuseipdb.abuseConfidenceScore"},
+        {"name": "operator", "value": "greater_than_or_equal"},
+        {"name": "value", "value": "75"}
+      ]
+    },
+    {
+      "id": "node_firewall_drop",
+      "label": "Apply iptables DROP Rule",
+      "app_name": "SSH / Remote Bash",
+      "parameters": [
+        {"name": "command", "value": "iptables -I INPUT -s $node_webhook.attacker_ip -j DROP"}
+      ]
+    },
+    {
+      "id": "node_slack_alert",
+      "label": "Send Alert to #soc-defense",
+      "app_name": "Slack",
+      "parameters": [
+        {"name": "channel", "value": "#soc-defense"},
+        {"name": "message", "value": "🛡️ *Automated IP Ban*: Hostile attacker `$node_webhook.attacker_ip` auto-isolated after brute-force on honeypot."}
+      ]
+    }
+  ]
+}

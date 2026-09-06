@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis-SOAR Incident Response Orchestrator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glow { box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
+    </style>
+</head>
+<body class="bg-[#0b0f19] text-gray-200 min-h-screen">
+    <!-- Navbar -->
+    <header class="border-b border-gray-800 bg-[#111827]/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <span class="h-3 w-3 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-xl font-bold font-mono text-emerald-400">AEGIS<span class="text-white">-SOAR</span></span>
+            <span class="text-xs uppercase px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800 text-emerald-300 font-mono">SecOps Playbook Orchestration</span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="triggerSim('phishing_malicious')" class="px-3 py-1.5 text-xs font-mono bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700 rounded transition">
+                ⚡ Simulate Phishing Attack
+            </button>
+            <button onclick="triggerSim('bruteforce')" class="px-3 py-1.5 text-xs font-mono bg-amber-900/60 hover:bg-amber-800 text-amber-200 border border-amber-700 rounded transition">
+                ⚡ Simulate Honeypot Brute-Force
+            </button>
+            <button onclick="triggerSim('phishing_benign')" class="px-3 py-1.5 text-xs font-mono bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded transition">
+                ⚡ Test Benign Email
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-6">
+        <!-- Top KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div class="bg-[#111827] border border-gray-800 rounded-xl p-5 glow">
+                <div class="text-xs uppercase text-gray-400 font-mono">Total Playbook Runs</div>
+                <div id="metric-runs" class="text-3xl font-bold text-white font-mono mt-2">0</div>
+                <div class="text-xs text-gray-500 mt-1">Automated Workflows</div>
+            </div>
+            <div class="bg-[#111827] border border-gray-800 rounded-xl p-5">
+                <div class="text-xs uppercase text-gray-400 font-mono">Threats Contained</div>
+                <div id="metric-threats" class="text-3xl font-bold text-emerald-400 font-mono mt-2">0</div>
+                <div class="text-xs text-emerald-500/70 mt-1">Neutralized in &lt; 50ms</div>
+            </div>
+            <div class="bg-[#111827] border border-gray-800 rounded-xl p-5">
+                <div class="text-xs uppercase text-gray-400 font-mono">Account Sessions Revoked</div>
+                <div id="metric-sessions" class="text-3xl font-bold text-cyan-400 font-mono mt-2">0</div>
+                <div class="text-xs text-cyan-500/70 mt-1">Okta / SSO Credentials Locked</div>
+            </div>
+            <div class="bg-[#111827] border border-gray-800 rounded-xl p-5">
+                <div class="text-xs uppercase text-gray-400 font-mono">Firewall Rules Injected</div>
+                <div id="metric-firewall" class="text-3xl font-bold text-rose-400 font-mono mt-2">0</div>
+                <div class="text-xs text-rose-500/70 mt-1">Perimeter Ingress Drops</div>
+            </div>
+        </div>
+
+        <!-- Visual Orchestration Workflow Pipeline -->
+        <div class="bg-[#111827] border border-gray-800 rounded-xl p-5">
+            <h3 class="text-xs uppercase font-mono text-gray-400 mb-3">Live Playbook DAG Pipeline</h3>
+            <div class="grid grid-cols-5 gap-3 text-center font-mono text-xs">
+                <div class="p-3 bg-gray-900 border border-gray-800 rounded-lg">
+                    <div class="text-gray-500 text-[10px]">STAGE 1</div>
+                    <div class="font-bold text-cyan-400 mt-1">Alert Ingestion</div>
+                    <div class="text-[10px] text-gray-400 mt-1">Webhook / SIEM</div>
+                </div>
+                <div class="p-3 bg-gray-900 border border-gray-800 rounded-lg">
+                    <div class="text-gray-500 text-[10px]">STAGE 2</div>
+                    <div class="font-bold text-blue-400 mt-1">Threat Intel</div>
+                    <div class="text-[10px] text-gray-400 mt-1">VirusTotal / AbuseIPDB</div>
+                </div>
+                <div class="p-3 bg-gray-900 border border-gray-800 rounded-lg">
+                    <div class="text-gray-500 text-[10px]">STAGE 3</div>
+                    <div class="font-bold text-amber-400 mt-1">Decision Engine</div>
+                    <div class="text-[10px] text-gray-400 mt-1">Threat Score Eval</div>
+                </div>
+                <div class="p-3 bg-gray-900 border border-gray-800 rounded-lg">
+                    <div class="text-gray-500 text-[10px]">STAGE 4</div>
+                    <div class="font-bold text-rose-400 mt-1">Auto-Containment</div>
+                    <div class="text-[10px] text-gray-400 mt-1">Okta JIT / Firewall Drop</div>
+                </div>
+                <div class="p-3 bg-gray-900 border border-gray-800 rounded-lg">
+                    <div class="text-gray-500 text-[10px]">STAGE 5</div>
+                    <div class="font-bold text-emerald-400 mt-1">Case & Notif</div>
+                    <div class="text-[10px] text-gray-400 mt-1">TheHive / Slack Alert</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Execution Audit Log Table -->
+        <div class="bg-[#111827] border border-gray-800 rounded-xl p-5">
+            <div class="flex items-center justify-between pb-4 border-b border-gray-800">
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-200 font-mono">ORCHESTRATION AUDIT LOG & EXECUTION HISTORY</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Real-time trace of automated SecOps triage decisions and containment steps</p>
+                </div>
+                <button onclick="fetchExecutions()" class="px-3 py-1.5 text-xs font-mono bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-700 transition">
+                    ↻ Refresh
+                </button>
+            </div>
+
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-left text-xs font-mono">
+                    <thead class="text-gray-400 bg-gray-900/50 uppercase border-b border-gray-800">
+                        <tr>
+                            <th class="py-2.5 px-3">Execution ID</th>
+                            <th class="py-2.5 px-3">Playbook</th>
+                            <th class="py-2.5 px-3">Verdict</th>
+                            <th class="py-2.5 px-3">Latency</th>
+                            <th class="py-2.5 px-3">Automated Actions Taken</th>
+                            <th class="py-2.5 px-3">Case ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="execution-table-body" class="divide-y divide-gray-800/60 text-gray-300">
+                        <tr>
+                            <td colspan="6" class="py-6 text-center text-gray-500">No playbooks executed yet. Click one of the simulation buttons above!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let totalRuns = 0;
+        let threatsContained = 0;
+        let sessionsRevoked = 0;
+        let firewallInjected = 0;
+
+        async function fetchExecutions() {
+            try {
+                const res = await fetch('/api/v1/executions');
+                const data = await res.json();
+                
+                totalRuns = data.length;
+                threatsContained = data.filter(e => e.verdict.includes('CONTAINED')).length;
+                sessionsRevoked = data.reduce((acc, e) => acc + (e.actions_taken.some(a => a.includes('Revoked')) ? 1 : 0), 0);
+                firewallInjected = data.reduce((acc, e) => acc + (e.actions_taken.some(a => a.includes('iptables') || a.includes('blocked IP')) ? 1 : 0), 0);
+
+                document.getElementById('metric-runs').textContent = totalRuns;
+                document.getElementById('metric-threats').textContent = threatsContained;
+                document.getElementById('metric-sessions').textContent = sessionsRevoked;
+                document.getElementById('metric-firewall').textContent = firewallInjected;
+
+                const tbody = document.getElementById('execution-table-body');
+                if (data.length > 0) {
+                    tbody.innerHTML = data.map(e => `
+                        <tr class="hover:bg-gray-800/40">
+                            <td class="py-2.5 px-3 font-semibold text-cyan-400">${e.execution_id}</td>
+                            <td class="py-2.5 px-3 text-white">${e.playbook}</td>
+                            <td class="py-2.5 px-3">${renderBadge(e.verdict)}</td>
+                            <td class="py-2.5 px-3 text-gray-400">${e.elapsed_ms}ms</td>
+                            <td class="py-2.5 px-3 text-emerald-300 max-w-md truncate">${e.actions_taken.join('; ') || 'None'}</td>
+                            <td class="py-2.5 px-3 font-mono text-amber-400 font-bold">${e.case_id || '-'}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch(e) {
+                console.error("Failed to fetch executions:", e);
+            }
+        }
+
+        function renderBadge(verdict) {
+            if (verdict.includes('CONTAINED')) {
+                return '<span class="px-2 py-0.5 rounded text-[10px] bg-rose-950 text-rose-300 border border-rose-800 font-bold">CONTAINED</span>';
+            } else if (verdict.includes('CLEARED')) {
+                return '<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800">BENIGN</span>';
+            }
+            return `<span class="px-2 py-0.5 rounded text-[10px] bg-gray-800 text-gray-300">${verdict}</span>`;
+        }
+
+        async function triggerSim(type) {
+            let endpoint = '/api/v1/alerts/webhook';
+            let payload = {};
+
+            if (type === 'phishing_malicious') {
+                payload = {
+                    playbook: "phishing_triage",
+                    recipient_email: "v.tsiamouras@apexfin.corp",
+                    sender_email: "security-update@login-microsoft-verify.top",
+                    sender_ip: "185.220.101.5",
+                    extracted_urls: ["https://login-microsoft-verify.top/auth/session-token"]
+                };
+            } else if (type === 'bruteforce') {
+                payload = {
+                    playbook: "bruteforce_containment",
+                    attacker_ip: "194.26.29.66",
+                    attempt_count: 18,
+                    service: "ShadowPot SSH Honeypot"
+                };
+            } else {
+                payload = {
+                    playbook: "phishing_triage",
+                    recipient_email: "v.tsiamouras@apexfin.corp",
+                    sender_email: "newsletter@partner-bank.com",
+                    sender_ip: "54.240.8.10",
+                    extracted_urls: ["https://partner-bank.com/insights/q3-report"]
+                };
+            }
+
+            try {
+                await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                await fetchExecutions();
+            } catch(e) {
+                console.error("Error triggering simulation:", e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchExecutions);
+    </script>
+</body>
+</html>

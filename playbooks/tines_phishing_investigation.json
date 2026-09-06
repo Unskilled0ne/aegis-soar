@@ -1,0 +1,71 @@
+{
+  "schema_version": 4,
+  "name": "Automated Phishing Triage & Session Containment",
+  "description": "Enterprise Tines Story: Ingests suspicious email webhooks, extracts URLs, queries VirusTotal, revokes Okta sessions if malicious, and alerts SecOps in Slack.",
+  "agents": [
+    {
+      "type": "WebhookAgent",
+      "name": "Receive Suspicious Email Alert",
+      "options": {
+        "path": "phishing-inbound-webhook",
+        "secret": "tines_secret_token_123"
+      }
+    },
+    {
+      "type": "HTTPRequestAgent",
+      "name": "Enrich URLs via VirusTotal API",
+      "options": {
+        "url": "https://www.virustotal.com/api/v3/urls",
+        "method": "POST",
+        "headers": {
+          "x-apikey": "YOUR_VIRUSTOTAL_API_KEY"
+        },
+        "payload": {
+          "url": "{{ .Receive_Suspicious_Email_Alert.body.extracted_urls[0] }}"
+        }
+      }
+    },
+    {
+      "type": "EventTransformationAgent",
+      "name": "Evaluate Threat Score",
+      "options": {
+        "mode": "message_only",
+        "loop": false,
+        "actions": [
+          {
+            "match": "{{ .Enrich_URLs_via_VirusTotal_API.body.data.attributes.last_analysis_stats.malicious >= 3 }}",
+            "value": "MALICIOUS"
+          }
+        ]
+      }
+    },
+    {
+      "type": "HTTPRequestAgent",
+      "name": "Revoke Okta User Session",
+      "options": {
+        "url": "https://company.okta.com/api/v1/users/{{ .Receive_Suspicious_Email_Alert.body.recipient_email }}/lifecycle/expire_password",
+        "method": "POST",
+        "headers": {
+          "Authorization": "SSWS YOUR_OKTA_API_TOKEN"
+        }
+      }
+    },
+    {
+      "type": "HTTPRequestAgent",
+      "name": "Dispatch Slack Security Alert",
+      "options": {
+        "url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+        "method": "POST",
+        "payload": {
+          "text": "🚨 *SEV-1 Phishing Incident Automated Containment*: Revoked user sessions for {{ .Receive_Suspicious_Email_Alert.body.recipient_email }}. Malicious IOC: {{ .Receive_Suspicious_Email_Alert.body.extracted_urls[0] }}"
+        }
+      }
+    }
+  ],
+  "links": [
+    {"source": "Receive Suspicious Email Alert", "receiver": "Enrich URLs via VirusTotal API"},
+    {"source": "Enrich URLs via VirusTotal API", "receiver": "Evaluate Threat Score"},
+    {"source": "Evaluate Threat Score", "receiver": "Revoke Okta User Session"},
+    {"source": "Revoke Okta User Session", "receiver": "Dispatch Slack Security Alert"}
+  ]
+}

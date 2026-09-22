@@ -42,7 +42,7 @@ class ThreatIntelService:
         """
         Queries AbuseIPDB / Threat Feed for IP reputation.
         """
-        # Simulated reputation scoring
+        
         if ip_str.startswith("127.") or ip_str.startswith("192.168.") or ip_str.startswith("10."):
             return {
                 "ioc": ip_str,
@@ -54,7 +54,7 @@ class ThreatIntelService:
                 "verdict": "BENIGN"
             }
 
-        # Check for simulated malicious external attack IPs
+        
         is_suspicious = any(ip_str.endswith(x) for x in [".66", ".99", ".142", ".201"])
         score = 94 if is_suspicious else 12
 

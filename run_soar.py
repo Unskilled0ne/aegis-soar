@@ -21,7 +21,7 @@ def run_cli_simulations():
         border_style="green"
     ))
 
-    # Scenario 1: Critical Phishing Attack
+    
     console.print("[bold yellow][*] Executing Playbook 1: Phishing Credential Harvester Triage...[/bold yellow]")
     phish_alert = {
         "recipient_email": "v.tsiamouras@apexfin.corp",
@@ -31,7 +31,7 @@ def run_cli_simulations():
     }
     r1 = orchestrator.run_playbook("phishing_triage", phish_alert)
 
-    # Scenario 2: ShadowPot SSH Brute-Force
+    
     console.print("[bold yellow][*] Executing Playbook 2: ShadowPot Honeypot Attacker Auto-Isolation...[/bold yellow]")
     brute_alert = {
         "attacker_ip": "194.26.29.66",
@@ -40,7 +40,7 @@ def run_cli_simulations():
     }
     r2 = orchestrator.run_playbook("bruteforce_containment", brute_alert)
 
-    # Scenario 3: Benign Email Clearance
+    
     console.print("[bold cyan][*] Executing Playbook 3: Benign Corporate Communication Triage...[/bold cyan]")
     benign_alert = {
         "recipient_email": "v.tsiamouras@apexfin.corp",
@@ -50,7 +50,7 @@ def run_cli_simulations():
     }
     r3 = orchestrator.run_playbook("phishing_triage", benign_alert)
 
-    # Summary Table
+    
     table = Table(title="SOAR Orchestration Execution Audit Trail", border_style="dim")
     table.add_column("Exec ID", style="bold cyan")
     table.add_column("Playbook", style="bold white")

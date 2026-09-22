@@ -49,14 +49,12 @@ class SOAROrchestrator:
         return execution_record
 
     def _playbook_phishing(self, exec_id: str, alert: Dict[str, Any], steps: List[Dict[str, Any]]) -> Dict[str, Any]:
-        # Step 1: Alert Ingestion
         recipient = alert.get("recipient_email", "user@apexfin.corp")
         sender = alert.get("sender_email", "unknown@external.com")
         urls = alert.get("extracted_urls", [])
         sender_ip = alert.get("sender_ip", "185.220.101.5")
         steps.append({"step": "INGEST_ALERT", "status": "COMPLETED", "details": f"Ingested email from {sender} to {recipient} with {len(urls)} URLs."})
 
-        # Step 2: Threat Intelligence Enrichment
         intel_findings = []
         is_malicious = False
         for url in urls:
@@ -67,7 +65,6 @@ class SOAROrchestrator:
         steps.append({"step": "THREAT_INTEL_LOOKUP", "status": "COMPLETED", "details": f"Analyzed {len(urls)} URLs. Malicious verdict: {is_malicious}"})
 
         actions = []
-        # Step 3: Decision & Containment
         if is_malicious:
             severity = "CRITICAL"
             case = self.ticketing.create_case(
@@ -79,20 +76,17 @@ class SOAROrchestrator:
             case_id = case["case_id"]
             steps.append({"step": "CREATE_CASE", "status": "COMPLETED", "details": f"Created incident case {case_id} in TheHive."})
 
-            # Action 1: Revoke victim user sessions
             self.identity.revoke_user_sessions(recipient)
             actions.append(f"Revoked active SSO/OAuth tokens for {recipient}")
             self.ticketing.add_audit_log(case_id, f"Revoked active sessions for {recipient}")
             steps.append({"step": "CONTAIN_USER", "status": "COMPLETED", "details": f"Revoked user sessions for {recipient}."})
 
-            # Action 2: Block sender domain & IP on firewall
             self.firewall.block_domain(sender.split("@")[-1], reason="Phishing domain delivery")
             self.firewall.block_ip(sender_ip, reason="Malicious email relay source")
             actions.append(f"Sinkholed sender domain {sender.split('@')[-1]} and blocked IP {sender_ip}")
             self.ticketing.add_audit_log(case_id, f"Blocked domain and IP {sender_ip}")
             steps.append({"step": "FIREWALL_BLOCK", "status": "COMPLETED", "details": f"Injected perimeter block rules for {sender_ip}."})
 
-            # Action 3: Notify SecOps
             self.notifier.dispatch_alert(
                 title=f"Phishing Contained: {recipient}",
                 severity=severity,
@@ -125,7 +119,6 @@ class SOAROrchestrator:
         service = alert.get("service", "SSH / Honeypot")
         steps.append({"step": "INGEST_ALERT", "status": "COMPLETED", "details": f"Received {service} brute force alert from {attacker_ip} ({attempt_count} attempts)."})
 
-        # Step 2: IP Reputation Query
         ip_intel = self.threat_intel.inspect_ip(attacker_ip)
         steps.append({"step": "THREAT_INTEL_LOOKUP", "status": "COMPLETED", "details": f"Abuse confidence: {ip_intel['abuse_confidence_score']}%, Country: {ip_intel['country']}"})
 
@@ -140,12 +133,10 @@ class SOAROrchestrator:
             )
             case_id = case["case_id"]
 
-            # Action 1: Inject Firewall Drop
             fw_res = self.firewall.block_ip(attacker_ip, reason=f"High frequency {service} brute-force attack", ttl_minutes=1440)
             actions.append(f"Applied iptables DROP rule for {attacker_ip} (24h ban)")
             steps.append({"step": "FIREWALL_BLOCK", "status": "COMPLETED", "details": f"Injected rule: {fw_res['rule']}"})
 
-            # Action 2: Dispatch Alert
             self.notifier.dispatch_alert(
                 title=f"Brute-Force Attacker Auto-Banned: {attacker_ip}",
                 severity=severity,

@@ -11,3 +11,10 @@ logs/*
 *.db
 .pytest_cache/
 
+
+# Secrets
+*.key
+*.pub
+*.pem
+.env
+

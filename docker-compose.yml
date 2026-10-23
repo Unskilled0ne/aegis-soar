@@ -5,7 +5,7 @@ services:
     build: .
     container_name: aegis-soar-engine
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./logs:/app/logs
     environment:

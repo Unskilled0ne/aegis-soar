@@ -1,0 +1,15 @@
+{
+  "scenario_id": "SCENARIO-03",
+  "ground_truth": "FALSE_POSITIVE",
+  "expected_technique": "T1566",
+  "alert": {
+    "alert_id": "EMAIL-1004",
+    "source": "wazuh",
+    "event_type": "External Email Inbound",
+    "severity": "LOW",
+    "source_ip": "54.240.8.10",
+    "user_identity": "v.tsiamouras@apexfin.corp",
+    "extracted_urls": ["https://partner-bank.com/insights/q3-report"],
+    "raw_log": "Inbound corporate communication newsletter@partner-bank.com"
+  }
+}

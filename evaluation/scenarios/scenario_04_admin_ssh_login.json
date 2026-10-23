@@ -1,0 +1,16 @@
+{
+  "scenario_id": "SCENARIO-04",
+  "ground_truth": "FALSE_POSITIVE",
+  "expected_technique": "T1078",
+  "alert": {
+    "alert_id": "WAZUH-5501",
+    "source": "wazuh",
+    "event_type": "SSH Session Established",
+    "severity": "LOW",
+    "source_ip": "192.168.1.50",
+    "destination_ip": "192.168.1.150",
+    "user_identity": "v.tsiamouras",
+    "metadata": {"attempt_count": 1},
+    "raw_log": "Accepted publickey for v.tsiamouras from 192.168.1.50 port 51100 ssh2: RSA SHA256:7f4a..."
+  }
+}

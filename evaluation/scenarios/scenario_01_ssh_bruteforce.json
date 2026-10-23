@@ -1,0 +1,16 @@
+{
+  "scenario_id": "SCENARIO-01",
+  "ground_truth": "TRUE_POSITIVE",
+  "expected_technique": "T1110.001",
+  "alert": {
+    "alert_id": "WAZUH-100301",
+    "source": "wazuh",
+    "event_type": "SSH Authentication Brute Force Detected",
+    "severity": "HIGH",
+    "source_ip": "194.26.29.66",
+    "destination_ip": "192.168.1.150",
+    "target_host": "prod-ssh-bastion",
+    "metadata": {"attempt_count": 18},
+    "raw_log": "Failed password for root from 194.26.29.66 port 44122 ssh2 (repeated 18 times)"
+  }
+}

@@ -42,8 +42,20 @@ class NotificationService:
 
         self.sent_notifications.append(payload)
         logger.info(f"[Slack Alert] Dispatched {severity} alert for {case_id}")
+
+        delivery_status = "simulated_local"
+        if self.webhook_url and "MOCK" not in self.webhook_url and self.webhook_url.startswith("http"):
+            try:
+                import requests
+                resp = requests.post(self.webhook_url, json=payload, timeout=3.0)
+                delivery_status = f"delivered (HTTP {resp.status_code})"
+            except Exception as e:
+                logger.warning(f"[Slack Alert] Outbound webhook delivery failed: {e}")
+                delivery_status = f"delivery_failed: {e}"
+
         return {
             "status": "dispatched",
+            "delivery": delivery_status,
             "channel": "#soc-incidents",
             "payload": payload
         }

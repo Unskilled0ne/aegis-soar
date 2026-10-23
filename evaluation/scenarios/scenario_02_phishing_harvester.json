@@ -1,0 +1,15 @@
+{
+  "scenario_id": "SCENARIO-02",
+  "ground_truth": "TRUE_POSITIVE",
+  "expected_technique": "T1566.002",
+  "alert": {
+    "alert_id": "PHISH-9921",
+    "source": "wazuh",
+    "event_type": "Inbound Email Credential Harvester Link",
+    "severity": "CRITICAL",
+    "source_ip": "185.220.101.5",
+    "user_identity": "v.tsiamouras@apexfin.corp",
+    "extracted_urls": ["https://login-microsoft-verify.top/auth/session-token"],
+    "raw_log": "Email received from security-alert@login-microsoft-verify.top containing phishing URL"
+  }
+}

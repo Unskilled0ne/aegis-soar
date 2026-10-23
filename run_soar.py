@@ -12,7 +12,8 @@ from engine.server import app
 console = Console()
 
 def run_cli_simulations():
-    orchestrator = SOAROrchestrator()
+    from engine.server import load_config
+    orchestrator = SOAROrchestrator(config=load_config())
 
     console.print()
     console.print(Panel.fit(
@@ -61,12 +62,18 @@ def run_cli_simulations():
 
     for r in [r1, r2, r3]:
         verdict_badge = f"[bold red]{r['verdict']}[/bold red]" if "CONTAINED" in r["verdict"] else f"[bold green]{r['verdict']}[/bold green]"
+        actions_str = "; ".join(r["actions_taken"])
+        if len(actions_str) > 55:
+            actions_str = actions_str[:52] + "..."
+        elif not actions_str:
+            actions_str = "None"
+
         table.add_row(
             r["execution_id"],
             r["playbook"],
             verdict_badge,
             f"{r['elapsed_ms']}ms",
-            "; ".join(r["actions_taken"])[:55] + "...",
+            actions_str,
             r["case_id"] or "-"
         )
 

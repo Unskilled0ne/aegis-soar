@@ -105,8 +105,8 @@ soar-incident-response/
 ### 1. Installation
 
 ```bash
-git clone https://github.com/your-username/soar-incident-response.git
-cd soar-incident-response
+git clone https://github.com/Unskilled0ne/aegis-soar.git
+cd aegis-soar
 
 python3 -m venv venv
 source venv/bin/activate

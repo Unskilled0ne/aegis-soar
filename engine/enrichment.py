@@ -114,13 +114,24 @@ class EnrichmentPipeline:
         events = []
         target_ip = alert.source_ip
 
-        shadowpot_log = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "shadowpot", "logs", "shadowpot.json"
-        )
-        if target_ip and os.path.exists(shadowpot_log):
+        candidate_paths = [
+            os.getenv("SHADOWPOT_LOG_PATH"),
+            os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                "shadowpot", "logs", "shadowpot.json"
+            ),
+            "/var/log/shadowpot/shadowpot.json"
+        ]
+
+        found_log = None
+        for p in candidate_paths:
+            if p and os.path.exists(p):
+                found_log = p
+                break
+
+        if target_ip and found_log:
             try:
-                with open(shadowpot_log, "r", encoding="utf-8") as f:
+                with open(found_log, "r", encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
                         if line and target_ip in line:

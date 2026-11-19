@@ -1,6 +1,6 @@
 import os
 import yaml
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -86,15 +86,32 @@ async def ingest_wazuh_alert(payload: Dict[str, Any]):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/alerts/investigate")
-async def investigate_alert_endpoint(payload: Dict[str, Any]):
+async def investigate_alert_endpoint(payload: Union[List[Dict[str, Any]], Dict[str, Any]]):
     try:
         from engine.models import SecurityAlert
         import uuid
-        if "alert_id" not in payload:
-            payload["alert_id"] = f"ALT-{uuid.uuid4().hex[:8].upper()}"
-        alert = SecurityAlert(**payload)
-        investigation = orchestrator.investigate_alert(alert)
-        return investigation
+
+        if isinstance(payload, list):
+            investigations = []
+            for item in payload:
+                if not isinstance(item, dict):
+                    continue
+                if "alert_id" not in item:
+                    item["alert_id"] = f"ALT-{uuid.uuid4().hex[:8].upper()}"
+                if "event_type" not in item:
+                    item["event_type"] = "ndr_alert"
+                alert = SecurityAlert(**item)
+                inv = orchestrator.investigate_alert(alert)
+                investigations.append(inv)
+            return {"status": "success", "count": len(investigations), "investigations": investigations}
+        else:
+            if "alert_id" not in payload:
+                payload["alert_id"] = f"ALT-{uuid.uuid4().hex[:8].upper()}"
+            if "event_type" not in payload:
+                payload["event_type"] = "ndr_alert"
+            alert = SecurityAlert(**payload)
+            investigation = orchestrator.investigate_alert(alert)
+            return investigation
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -271,6 +271,67 @@ class LLMInvestigator:
                 recommended_actions=actions
             )
 
+        is_ndr = alert.source.startswith("ndr-") or "ndr" in alert.event_type.lower()
+
+        # High-Confidence Correlation: Perimeter NDR Alert + Internal Honeypot Engagement (ShadowPot)
+        if (is_ndr or alert.severity in ("HIGH", "CRITICAL")) and enrichment.correlated_logs:
+            evidence.append(f"CRITICAL CORRELATION: Host {alert.source_ip} triggered perimeter NDR detection and interacted with internal ShadowPot honeypot.")
+            evidence.append(f"Correlated honeypot telemetry: {len(enrichment.correlated_logs)} interactive sessions recorded.")
+            if alert.rule_description:
+                evidence.append(f"Perimeter Signature: {alert.rule_description}")
+
+            actions.append(RecommendedAction(
+                action_type="FIREWALL_BLOCK_IP",
+                target=alert.source_ip,
+                reason="Correlated perimeter exploit probe + internal honeypot engagement (100% True Positive)"
+            ))
+            actions.append(RecommendedAction(
+                action_type="CREATE_THEHIVE_CASE",
+                target=alert.alert_id,
+                reason="High-confidence lateral movement / active decoy engagement"
+            ))
+
+            return InvestigationVerdict(
+                verdict="TRUE_POSITIVE",
+                confidence=1.0,
+                risk_score=98,
+                attack_tactic="Lateral Movement",
+                attack_technique="T1021 - Remote Services & Honeypot Interaction",
+                summary=f"High-confidence true positive: {alert.source_ip} triggered NDR perimeter detection and engaged internal ShadowPot honeypot.",
+                timeline=timeline,
+                evidence=evidence,
+                recommended_actions=actions
+            )
+
+        # Standalone High-Severity NDR Intrusion Attempt
+        if is_ndr and alert.severity in ("HIGH", "CRITICAL"):
+            evidence.append(f"High-severity NDR passive network detection: {alert.rule_description or alert.event_type}")
+            if alert.destination_ip:
+                evidence.append(f"Targeted internal asset: {alert.destination_ip}")
+
+            actions.append(RecommendedAction(
+                action_type="FIREWALL_BLOCK_IP",
+                target=alert.source_ip,
+                reason=f"NDR perimeter threat containment: {alert.rule_description or 'High severity probe'}"
+            ))
+            actions.append(RecommendedAction(
+                action_type="CREATE_THEHIVE_CASE",
+                target=alert.alert_id,
+                reason="High-severity network detection alert from Pi4 NDR sensor"
+            ))
+
+            return InvestigationVerdict(
+                verdict="TRUE_POSITIVE",
+                confidence=0.92,
+                risk_score=85,
+                attack_tactic="Initial Access",
+                attack_technique="T1190 - Exploit Public-Facing Application",
+                summary=f"Confirmed network intrusion attempt from {alert.source_ip} detected by Pi4 NDR sensor.",
+                timeline=timeline,
+                evidence=evidence,
+                recommended_actions=actions
+            )
+
         if not malicious_urls and not ip_is_malicious and abuse_score < 25:
             evidence.append("Threat intelligence engines reported clean IOC reputation")
             if alert.source_ip:

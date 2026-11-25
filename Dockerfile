@@ -11,4 +11,4 @@ COPY . .
 # Assuming it runs on port 8000 using uvicorn or similar
 EXPOSE 8000
 
-CMD ["python", "run_soar.py"]
+CMD ["python", "run_soar.py", "--serve", "--port", "8000"]
